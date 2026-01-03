@@ -1,0 +1,33 @@
+class Solution {
+public:
+    int numOfWays(int n) {
+        long long MOD = 1e9 + 7;
+        
+        // Base case for n = 1
+        // There are 6 ways to paint a row with 2 colors (e.g., 121)
+        // There are 6 ways to paint a row with 3 colors (e.g., 123)
+        long long color2 = 6;
+        long long color3 = 6;
+        
+        // Iterate from the 2nd row up to the nth row
+        for (int i = 2; i <= n; i++) {
+            // Calculate new counts based on the transition rules derived:
+            // Type A (2-color) next row can be formed by:
+            // - 3 patterns if prev was Type A
+            // - 2 patterns if prev was Type B
+            long long next_color2 = (3 * color2 + 2 * color3) % MOD;
+            
+            // Type B (3-color) next row can be formed by:
+            // - 2 patterns if prev was Type A
+            // - 2 patterns if prev was Type B
+            long long next_color3 = (2 * color2 + 2 * color3) % MOD;
+            
+            // Update current counts for the next iteration
+            color2 = next_color2;
+            color3 = next_color3;
+        }
+        
+        // The total ways is the sum of ending with Type A or Type B
+        return (color2 + color3) % MOD;
+    }
+};
