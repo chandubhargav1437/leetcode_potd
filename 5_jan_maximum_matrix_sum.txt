@@ -1,0 +1,41 @@
+class Solution {
+public:
+    long long maxMatrixSum(vector<vector<int>>& matrix) {
+        long long totalSum = 0;
+        int minAbsVal = INT_MAX;
+        int negativeCount = 0;
+        
+        int n = matrix.size();
+        
+        // Iterate through the matrix once
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                int val = matrix[i][j];
+                
+                // Track the count of negative numbers
+                if (val < 0) {
+                    negativeCount++;
+                }
+                
+                // Find the absolute value
+                int absVal = abs(val);
+                
+                // Add absolute value to total sum assuming we can make it positive
+                totalSum += absVal;
+                
+                // Keep track of the smallest absolute value in the entire matrix
+                if (absVal < minAbsVal) {
+                    minAbsVal = absVal;
+                }
+            }
+        }
+        
+        // If we have an even number of negatives, we can turn them all positive.
+        // If odd, one number must remain negative. We sacrifice the smallest absolute value.
+        if (negativeCount % 2 != 0) {
+            totalSum -= 2LL * minAbsVal;
+        }
+        
+        return totalSum;
+    }
+};
