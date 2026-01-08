@@ -1,0 +1,58 @@
+class Solution {
+public:
+    int maxDotProduct(vector<int>& nums1, vector<int>& nums2) {
+        int n = nums1.size();
+        int m = nums2.size();
+        
+        // We use a 1D DP array of size 'm' (size of nums2).
+        // dp[j] will effectively store the result for the current row i and column j.
+        // Initialize with INT_MIN because values can be negative.
+        vector<int> dp(m, INT_MIN);
+        
+        for (int i = 0; i < n; ++i) {
+            // 'prev_diag' will hold the value of dp[i-1][j-1].
+            // Before we start the inner loop, there is no "diagonal" for j=0, 
+            // so we can initialize it to a dummy value.
+            int prev_diag = INT_MIN; 
+            
+            for (int j = 0; j < m; ++j) {
+                // Store the current dp[j] (which corresponds to dp[i-1][j]) 
+                // because we are about to overwrite it. It will become the 
+                // 'prev_diag' for the next iteration (j+1).
+                int current_val_in_prev_row = dp[j];
+                
+                // Calculate the product of the current pair
+                int product = nums1[i] * nums2[j];
+                
+                // Option 1: Start fresh with this product
+                // Option 2: Extend the previous diagonal path (if distinct and positive)
+                int current_max = product;
+                if (i > 0 && j > 0) {
+                    // We can only add the diagonal if it was positive.
+                    // If prev_diag is negative, adding it would decrease our max.
+                    current_max = max(current_max, product + prev_diag);
+                }
+                
+                // Option 3: Skip nums1[i] (inherit value from previous row: current_val_in_prev_row)
+                if (i > 0) {
+                    current_max = max(current_max, current_val_in_prev_row);
+                }
+                
+                // Option 4: Skip nums2[j] (inherit value from previous col: dp[j-1])
+                // Note: dp[j-1] has already been updated for the current row 'i'.
+                if (j > 0) {
+                    current_max = max(current_max, dp[j-1]);
+                }
+                
+                // Update the DP table
+                dp[j] = current_max;
+                
+                // Update prev_diag for the next column iteration
+                prev_diag = current_val_in_prev_row;
+            }
+        }
+        
+        // The last element contains the max dot product for the full arrays
+        return dp[m - 1];
+    }
+};
