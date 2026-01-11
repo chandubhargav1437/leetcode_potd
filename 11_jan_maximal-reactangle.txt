@@ -1,0 +1,55 @@
+class Solution {
+public:
+    int largestRectangleArea(vector<int>& heights) {
+        stack<int> s;
+        int max_area = 0;
+        int n = heights.size();
+        
+        // We iterate through all bars, plus one extra iteration (i == n) 
+        // with height 0 to force-pop remaining elements from the stack.
+        for (int i = 0; i <= n; ++i) {
+            // Use 0 height for the imaginary bar after the last real bar
+            int current_h = (i == n) ? 0 : heights[i];
+            
+            // Maintain a monotonic increasing stack
+            while (!s.empty() && current_h < heights[s.top()]) {
+                int h = heights[s.top()];
+                s.pop();
+                
+                // Determine the width of the rectangle with height 'h'
+                // The right boundary is the current index 'i'
+                // The left boundary is the index currently at the top of the stack
+                int w = s.empty() ? i : (i - s.top() - 1);
+                
+                max_area = max(max_area, h * w);
+            }
+            s.push(i);
+        }
+        return max_area;
+    }
+
+    int maximalRectangle(vector<vector<char>>& matrix) {
+        if (matrix.empty()) return 0;
+        
+        int rows = matrix.size();
+        int cols = matrix[0].size();
+        vector<int> heights(cols, 0);
+        int max_area = 0;
+
+        // Iterate through each row
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                // Update heights: if '1', increment; if '0', reset to 0
+                if (matrix[i][j] == '1') {
+                    heights[j] += 1;
+                } else {
+                    heights[j] = 0;
+                }
+            }
+            // Calculate max area for the current row's histogram
+            max_area = max(max_area, largestRectangleArea(heights));
+        }
+
+        return max_area;
+    }
+};
