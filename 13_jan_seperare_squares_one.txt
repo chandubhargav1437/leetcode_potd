@@ -1,0 +1,59 @@
+class Solution {
+public:
+double getAreaBelow(const vector<vector<int>>& squares, double h) {
+        double currentArea = 0.0;
+        for (const auto& sq : squares) {
+            double y = (double)sq[1];
+            double l = (double)sq[2];
+            
+            // Calculate how much of the square's height is below h
+            // min(h, y + l): The line cannot cover more than the top of the square
+            // - y: Subtract the bottom y to get height relative to the square's start
+            double heightBelow = min(h, y + l) - y;
+            
+            // Ensure non-negative (if h < y, heightBelow would be negative)
+            heightBelow = max(0.0, heightBelow);
+            
+            // Add area: width * height_overlap
+            currentArea += l * heightBelow;
+        }
+        return currentArea;
+    }
+    double separateSquares(vector<vector<int>>& squares) {
+        double totalArea = 0.0;
+        double minY = 2e9; // Initialize with a large value
+        double maxY = -2e9; // Initialize with a small value
+
+        // 1. Calculate Total Area and determine search range [minY, maxY]
+        for (const auto& sq : squares) {
+            double l = (double)sq[2];
+            double y = (double)sq[1];
+            
+            totalArea += l * l;
+            minY = min(minY, y);
+            maxY = max(maxY, y + l);
+        }
+
+        double targetArea = totalArea / 2.0;
+        
+        // 2. Binary Search
+        double low = minY;
+        double high = maxY;
+        
+        // Run for fixed iterations for high precision 
+        // 100 iterations is enough to get precision far exceeding 10^-5
+        for (int i = 0; i < 100; ++i) {
+            double mid = low + (high - low) / 2.0;
+            
+            if (getAreaBelow(squares, mid) < targetArea) {
+                // Area below is too small, need to move line UP
+                low = mid;
+            } else {
+                // Area below is too big (or equal), need to move line DOWN
+                high = mid;
+            }
+        }
+
+        return low; // or high, they are virtually identical
+    }
+};
