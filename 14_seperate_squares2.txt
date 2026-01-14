@@ -1,0 +1,127 @@
+#include <vector>
+#include <algorithm>
+#include <map>
+
+using namespace std;
+
+// Segment Tree to manage the union of intervals on the X-axis
+class SegmentTree {
+    int n;
+    vector<int> count;       // Number of active rectangles covering this node
+    vector<long long> len;   // Total length covered by at least one rectangle in this node
+    vector<int> X;           // Coordinate compression map (original X values)
+
+public:
+    SegmentTree(const vector<int>& x_coords) {
+        X = x_coords;
+        n = X.size();
+        count.assign(4 * n, 0);
+        len.assign(4 * n, 0);
+    }
+
+    void update(int node, int l, int r, int x_low, int x_high, int val) {
+        if (X[r] <= x_low || X[l] >= x_high) {
+            return;
+        }
+        if (X[l] >= x_low && X[r] <= x_high) {
+            count[node] += val;
+        } else {
+            int mid = l + (r - l) / 2;
+            update(2 * node, l, mid, x_low, x_high, val);
+            update(2 * node + 1, mid, r, x_low, x_high, val);
+        }
+        pushUp(node, l, r);
+    }
+
+    void pushUp(int node, int l, int r) {
+        if (count[node] > 0) {
+            len[node] = (long long)X[r] - X[l];
+        } else {
+            if (r - l == 1) {
+                len[node] = 0;
+            } else {
+                len[node] = len[2 * node] + len[2 * node + 1];
+            }
+        }
+    }
+
+    long long getTotalLen() {
+        return len[1]; 
+    }
+};
+
+struct Event {
+    int y;
+    int type; // +1 for bottom edge, -1 for top edge
+    int x1, x2;
+    
+    bool operator<(const Event& other) const {
+        if (y != other.y) return y < other.y;
+        return type > other.type; 
+    }
+};
+
+struct Strip {
+    long long height;
+    long long width;
+    long long area;
+    int y_start;
+};
+
+class Solution {
+public:
+    double separateSquares(vector<vector<int>>& squares) {
+        vector<int> x_coords;
+        for (const auto& sq : squares) {
+            x_coords.push_back(sq[0]);
+            x_coords.push_back(sq[0] + sq[2]);
+        }
+        
+        sort(x_coords.begin(), x_coords.end());
+        x_coords.erase(unique(x_coords.begin(), x_coords.end()), x_coords.end());
+
+        vector<Event> events;
+        for (const auto& sq : squares) {
+            int x = sq[0];
+            int y = sq[1];
+            int l = sq[2];
+            events.push_back({y, 1, x, x + l});
+            events.push_back({y + l, -1, x, x + l});
+        }
+        sort(events.begin(), events.end());
+
+        SegmentTree st(x_coords);
+        vector<Strip> strips;
+        long long totalArea = 0;
+        
+        for (size_t i = 0; i < events.size() - 1; ++i) {
+            st.update(1, 0, x_coords.size() - 1, events[i].x1, events[i].x2, events[i].type);
+            
+            int current_y = events[i].y;
+            int next_y = events[i+1].y;
+            
+            if (next_y > current_y) {
+                long long width = st.getTotalLen();
+                long long height = next_y - current_y;
+                long long area = width * height;
+                
+                totalArea += area;
+                strips.push_back({height, width, area, current_y});
+            }
+        }
+
+        double target = totalArea / 2.0;
+        double currentSum = 0;
+
+        for (const auto& strip : strips) {
+            if (currentSum + strip.area >= target) {
+                double needed = target - currentSum;
+                if (strip.width == 0) return strip.y_start;
+                return strip.y_start + (needed / strip.width);
+            }
+            currentSum += strip.area;
+        }
+        
+        return 0.0;
+    }
+};
