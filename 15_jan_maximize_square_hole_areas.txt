@@ -1,0 +1,46 @@
+class Solution {
+private:
+    // Helper function to find the maximum consecutive gap
+    // This logic is identical for both horizontal and vertical bars
+    int getMaxGap(vector<int>& bars) {
+        // If no bars can be removed, the max gap is just the single unit cell (size 1)
+        if (bars.empty()) return 1;
+
+        // Step 1: Sort the bars to find consecutive sequences easily
+        sort(bars.begin(), bars.end());
+
+        int maxCount = 1;      // Tracks the longest sequence found so far
+        int currentCount = 1;  // Tracks the length of the current sequence being checked
+
+        // Step 2: Iterate through the sorted bars
+        for (size_t i = 1; i < bars.size(); i++) {
+            // Check if the current bar is consecutive to the previous one
+            if (bars[i] == bars[i - 1] + 1) {
+                currentCount++;
+            } else {
+                // Sequence broken: update maxCount and reset currentCount
+                maxCount = max(maxCount, currentCount);
+                currentCount = 1;
+            }
+        }
+
+        // Final check in case the longest sequence ends at the last element
+        maxCount = max(maxCount, currentCount);
+
+        // If we removed 'maxCount' consecutive bars, the gap size is 'maxCount + 1'
+        return maxCount + 1;
+    }
+
+public:
+    int maximizeSquareHoleArea(int n, int m, vector<int>& hBars, vector<int>& vBars) {
+        // Step 3: Get the max continuous height and width
+        int maxH = getMaxGap(hBars);
+        int maxV = getMaxGap(vBars);
+
+        // Step 4: The largest square is limited by the smaller dimension
+        int side = min(maxH, maxV);
+
+        // Return the area
+        return side * side;
+    }
+};
