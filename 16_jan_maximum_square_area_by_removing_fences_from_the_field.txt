@@ -1,0 +1,44 @@
+class Solution {
+public:
+    int maximizeSquareArea(int m, int n, vector<int>& hFences, vector<int>& vFences) {
+        // 1. Add the boundary fences to the arrays
+        hFences.push_back(1);
+        hFences.push_back(m);
+        vFences.push_back(1);
+        vFences.push_back(n);
+
+        // 2. Sort the fence coordinates to easily calculate distances
+        sort(hFences.begin(), hFences.end());
+        sort(vFences.begin(), vFences.end());
+
+        // 3. Calculate all possible vertical gaps (heights) and store in a hash set
+        unordered_set<long long> hGaps;
+        for (int i = 0; i < hFences.size(); ++i) {
+            for (int j = i + 1; j < hFences.size(); ++j) {
+                hGaps.insert((long long)hFences[j] - hFences[i]);
+            }
+        }
+
+        long long maxSide = -1;
+
+        // 4. Calculate all possible horizontal gaps (widths) and check if they exist in hGaps
+        for (int i = 0; i < vFences.size(); ++i) {
+            for (int j = i + 1; j < vFences.size(); ++j) {
+                long long currentGap = (long long)vFences[j] - vFences[i];
+                
+                // If this gap exists in the vertical gaps, we can form a square
+                if (hGaps.count(currentGap)) {
+                    maxSide = max(maxSide, currentGap);
+                }
+            }
+        }
+
+        // 5. Return result
+        if (maxSide == -1) {
+            return -1;
+        }
+
+        long long mod = 1e9 + 7;
+        return (maxSide * maxSide) % mod;
+    }
+};
