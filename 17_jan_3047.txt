@@ -1,0 +1,40 @@
+#pragma GCC optimize ("O2")
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+class Solution {
+public:
+    long long largestSquareArea(vector<vector<int>>& bottomLeft, vector<vector<int>>& topRight) {
+        long long maxSide = 0;
+        int n = bottomLeft.size();
+
+        // Iterate through all unique pairs of rectangles
+        for (int i = 0; i < n; ++i) {
+            for (int j = i + 1; j < n; ++j) {
+                
+                // Find the intersection boundaries
+                long long startX = max(bottomLeft[i][0], bottomLeft[j][0]);
+                long long endX = min(topRight[i][0], topRight[j][0]);
+                
+                long long startY = max(bottomLeft[i][1], bottomLeft[j][1]);
+                long long endY = min(topRight[i][1], topRight[j][1]);
+
+                // Calculate dimensions of the intersection
+                long long width = endX - startX;
+                long long height = endY - startY;
+
+                // Check for valid intersection
+                if (width > 0 && height > 0) {
+                    long long currentSide = min(width, height);
+                    if (currentSide > maxSide) {
+                        maxSide = currentSide;
+                    }
+                }
+            }
+        }
+
+        return maxSide * maxSide;
+    }
+};
