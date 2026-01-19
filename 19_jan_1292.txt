@@ -1,0 +1,63 @@
+class Solution {
+public:
+    int maxSideLength(vector<vector<int>>& mat, int threshold) {
+        int m = mat.size();
+        int n = mat[0].size();
+        
+        // Step 1: Create 2D Prefix Sum Array
+        // We use m+1 and n+1 to handle boundaries (1-based indexing)
+        // P[i][j] stores sum of rectangle from (0,0) to (i-1, j-1) in 'mat'
+        vector<vector<int>> P(m + 1, vector<int>(n + 1, 0));
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                P[i][j] = mat[i-1][j-1] 
+                        + P[i-1][j] 
+                        + P[i][j-1] 
+                        - P[i-1][j-1];
+            }
+        }
+
+        // Step 2: Binary Search for the maximum side length
+        int low = 0, high = min(m, n);
+        int ans = 0;
+
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+            
+            if (mid == 0) {
+                low = mid + 1;
+                continue;
+            }
+
+            if (isValidSquare(P, m, n, mid, threshold)) {
+                ans = mid;      // Found a valid square of size 'mid'
+                low = mid + 1;  // Try to find a larger one
+            } else {
+                high = mid - 1; // 'mid' is too big, try smaller
+            }
+        }
+        
+        return ans;
+    }
+    private:
+    // Helper function to check if ANY square of size 'len' has sum <= threshold
+    bool isValidSquare(const vector<vector<int>>& P, int m, int n, int len, int threshold) {
+        // Iterate through all possible bottom-right corners (i, j)
+        // that allow a square of size 'len'
+        for (int i = len; i <= m; i++) {
+            for (int j = len; j <= n; j++) {
+                // Calculate sum of square using 2D prefix sum formula
+                int currentSum = P[i][j] 
+                               - P[i-len][j] 
+                               - P[i][j-len] 
+                               + P[i-len][j-len];
+                
+                if (currentSum <= threshold) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+};
