@@ -1,0 +1,40 @@
+#include <vector>
+#include <cmath>
+#include <algorithm>
+
+using namespace std;
+
+class Solution {
+public:
+    vector<int> minBitwiseArray(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> ans(n);
+        
+        for (int i = 0; i < n; i++) {
+            int p = nums[i];
+            
+            // Case 1: The only even prime is 2.
+            // Since x | (x+1) always results in an odd number (LSB becomes 1),
+            // it is impossible to generate 2.
+            if (p == 2) {
+                ans[i] = -1;
+                continue;
+            }
+            
+            // Case 2: Odd Primes
+            // We need to count the number of trailing ones.
+            // Example: P = 23 (10111 binary). Trailing ones = 3.
+            int trailingOnes = 0;
+            while ((p >> trailingOnes) & 1) {
+                trailingOnes++;
+            }
+            
+            // To minimize x, we flip the highest bit possible in the sequence of trailing ones.
+            // This corresponds to the bit at index (trailingOnes - 1).
+            // Formula: x = p - 2^(trailingOnes - 1)
+            ans[i] = p - (1 << (trailingOnes - 1));
+        }
+        
+        return ans;
+    }
+};
