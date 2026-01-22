@@ -1,0 +1,115 @@
+#include <vector>
+#include <queue>
+#include <iostream>
+
+using namespace std;
+
+// Doubly Linked List Node
+struct Node {
+    long long val;
+    int id; // Original index, acts as a tie-breaker for "leftmost"
+    Node *prev = nullptr;
+    Node *next = nullptr;
+    bool active = true; // Marks if the node is still part of the list
+    
+    Node(long long v, int i) : val(v), id(i) {}
+};
+
+// Structure to store pair info in Priority Queue
+struct PairInfo {
+    long long sum;
+    int id;        // ID of the left node
+    Node* leftNode; // Pointer to the actual left node
+
+    // Custom comparator for Min-Heap
+    // Returns true if 'this' has lower priority than 'other'
+    bool operator>(const PairInfo& other) const {
+        if (sum != other.sum)
+            return sum > other.sum; // Smaller sum comes first
+        return id > other.id;       // Smaller ID (leftmost) comes first
+    }
+};
+
+class Solution {
+public:
+    int minimumPairRemoval(vector<int>& nums) {
+        int n = nums.size();
+        if (n < 2) return 0;
+
+        // 1. Build Doubly Linked List
+        vector<Node*> nodes(n);
+        for (int i = 0; i < n; ++i) {
+            nodes[i] = new Node(nums[i], i);
+            if (i > 0) {
+                nodes[i]->prev = nodes[i - 1];
+                nodes[i - 1]->next = nodes[i];
+            }
+        }
+
+        // 2. Initialize State
+        // badPairs counts how many adjacent pairs satisfy (left > right)
+        int badPairs = 0;
+        priority_queue<PairInfo, vector<PairInfo>, greater<PairInfo>> pq;
+
+        for (int i = 0; i < n - 1; ++i) {
+            if (nodes[i]->val > nodes[i + 1]->val) {
+                badPairs++;
+            }
+            // Add initial pair to PQ
+            pq.push({nodes[i]->val + nodes[i + 1]->val, nodes[i]->id, nodes[i]});
+        }
+
+        // If already sorted, 0 ops
+        if (badPairs == 0) return 0;
+
+        int ops = 0;
+
+        // 3. Simulation Loop
+        while (!pq.empty()) {
+            PairInfo top = pq.top();
+            pq.pop();
+
+            Node* u = top.leftNode;
+            Node* v = u->next;
+
+            // --- Lazy Removal Validation ---
+            // 1. Check if nodes are active (not previously merged)
+            // 2. Check if v is actually u's current neighbor
+            // 3. Check if the sum in PQ matches current values (handles updated neighbors)
+            if (!u->active || !v || !v->active || (u->val + v->val != top.sum)) {
+                continue;
+            }
+
+            // --- Perform Merge (1 Operation) ---
+            ops++;
+
+            // Step A: Remove old "bad pair" contributions from count
+            if (u->val > v->val) badPairs--; // The pair (u, v) itself
+            if (u->prev && u->prev->val > u->val) badPairs--; // Relationship (prev, u)
+            if (v->next && v->val > v->next->val) badPairs--; // Relationship (v, next)
+
+            // Step B: Update Sequence (Merge v into u)
+            u->val += v->val;        // Update value
+            u->next = v->next;       // Bypass v
+            if (v->next) v->next->prev = u; 
+            v->active = false;       // Mark v as removed
+
+            // Step C: Add new "bad pair" contributions and update PQ
+            // Check new (prev, u)
+            if (u->prev) {
+                if (u->prev->val > u->val) badPairs++;
+                pq.push({u->prev->val + u->val, u->prev->id, u->prev});
+            }
+            // Check new (u, next)
+            if (u->next) {
+                if (u->val > u->next->val) badPairs++;
+                pq.push({u->val + u->next->val, u->id, u});
+            }
+
+            // Step D: Check Termination
+            if (badPairs == 0) return ops;
+        }
+
+        return ops;
+    }
+};
