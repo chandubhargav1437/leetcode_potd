@@ -1,0 +1,109 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+
+using namespace std;
+
+class Solution {
+    // Helper struct to simulate Doubly Linked List nodes
+    struct Node {
+        long long val;
+        int prev;
+        int next;
+        bool active; // To mark if a node has been merged/removed
+    };
+
+public:
+    int minimumPairRemoval(vector<int>& nums) {
+        int n = nums.size();
+        if (n < 2) return 0;
+
+        vector<Node> nodes(n);
+        int descent_count = 0; // Tracks how many "unsorted" pairs exist
+        
+        // Min-Heap: Stores {sum, index}. 
+        // We use 'greater' so the pair with the smallest sum is at the top.
+        // If sums are equal, the pair with the smaller index (leftmost) is picked automatically.
+        priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<pair<long long, int>>> pq;
+
+        // 1. Initialize List and PQ
+        for (int i = 0; i < n; ++i) {
+            nodes[i].val = nums[i];
+            nodes[i].prev = (i == 0) ? -1 : i - 1;
+            nodes[i].next = (i == n - 1) ? -1 : i + 1;
+            nodes[i].active = true;
+
+            // Check if this pair (i, i+1) is a "descent" (unsorted)
+            if (i < n - 1) {
+                if (nums[i] > nums[i+1]) {
+                    descent_count++;
+                }
+                pq.push({(long long)nums[i] + nums[i+1], i});
+            }
+        }
+
+        // If already sorted, 0 operations
+        if (descent_count == 0) return 0;
+
+        int ops = 0;
+
+        while (descent_count > 0 && !pq.empty()) {
+            // Get the pair with the minimum sum
+            auto top = pq.top();
+            pq.pop();
+            
+            long long current_sum = top.first;
+            int u = top.second;         // Left node of the pair
+            int v = nodes[u].next;      // Right node of the pair
+
+            // --- Validity Checks (Lazy Deletion) ---
+            // 1. Check if u or v were already removed/merged
+            if (!nodes[u].active || v == -1 || !nodes[v].active) continue;
+            // 2. Check if the sum in the heap matches the current values (stale data check)
+            if (nodes[u].val + nodes[v].val != current_sum) continue;
+
+            // --- Update Descent Count (Remove old contributions) ---
+            int w = nodes[v].next; // The node after the pair
+            int p = nodes[u].prev; // The node before the pair
+
+            // 1. Remove the descent inside the pair (u, v) itself
+            if (nodes[u].val > nodes[v].val) descent_count--;
+            // 2. Remove descent between (prev, u)
+            if (p != -1 && nodes[p].val > nodes[u].val) descent_count--;
+            // 3. Remove descent between (v, next)
+            if (w != -1 && nodes[v].val > nodes[w].val) descent_count--;
+
+            // --- MERGE OPERATION ---
+            // 'u' absorbs 'v'. We update 'u' and mark 'v' as inactive.
+            nodes[u].val += nodes[v].val;   // Update value
+            nodes[u].next = w;              // Link u to w
+            if (w != -1) nodes[w].prev = u; // Link w back to u
+            nodes[v].active = false;        // Delete v
+
+            // --- Update Descent Count (Add new contributions) ---
+            // 1. Check new descent between (prev, new_u)
+            if (p != -1 && nodes[p].val > nodes[u].val) descent_count++;
+            // 2. Check new descent between (new_u, next)
+            if (w != -1 && nodes[u].val > nodes[w].val) descent_count++;
+
+            ops++;
+            
+            // If sorted, stop immediately
+            if (descent_count == 0) break;
+
+            // --- Push New Pairs to PQ ---
+            // Add new pair (u, next)
+            if (w != -1) {
+                pq.push({nodes[u].val + nodes[w].val, u});
+            }
+            // Add new pair (prev, u)
+            if (p != -1) {
+                // Important: Index by 'p' (the left element of the pair)
+                pq.push({nodes[p].val + nodes[u].val, p});
+            }
+        }
+
+        return ops;
+    }
+};
