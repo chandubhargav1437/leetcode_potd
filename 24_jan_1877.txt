@@ -1,0 +1,29 @@
+#include <vector>
+#include <algorithm> // Required for sort and max
+
+using namespace std;
+
+class Solution {
+public:
+    int minPairSum(vector<int>& nums) {
+        // Step 1: Sort the array in ascending order.
+        // This is crucial for the greedy strategy (pairing smallest with largest).
+        sort(nums.begin(), nums.end());
+        
+        int n = nums.size();
+        int maxPairSum = 0;
+        
+        // Step 2: Iterate through the first half of the array.
+        // We pair the element at index 'i' (smallest available) 
+        // with the element at index 'n - 1 - i' (largest available).
+        for (int i = 0; i < n / 2; ++i) {
+            // Calculate current pair sum
+            int currentSum = nums[i] + nums[n - 1 - i];
+            
+            // Update the maximum pair sum found so far
+            maxPairSum = max(maxPairSum, currentSum);
+        }
+        
+        return maxPairSum;
+    }
+};
