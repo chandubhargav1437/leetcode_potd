@@ -1,0 +1,37 @@
+#include <vector>
+#include <algorithm>
+#include <climits>
+
+using namespace std;
+
+class Solution {
+public:
+    int minimumDifference(vector<int>& nums, int k) {
+        // Edge case: If we only need 1 student, the diff is 0.
+        if (k == 1) return 0;
+        
+        // Step 1: Sort the scores in ascending order.
+        // This ensures that for any contiguous subarray, the last element 
+        // is the max and the first element is the min.
+        sort(nums.begin(), nums.end());
+        
+        int minDiff = INT_MAX;
+        
+        // Step 2: Iterate using a sliding window of size k.
+        // i is the start of the window, i + k - 1 is the end of the window.
+        // We ensure the window does not go out of bounds.
+        for (int i = 0; i <= nums.size() - k; i++) {
+            
+            // Calculate difference between highest (right side of window)
+            // and lowest (left side of window)
+            int currentDiff = nums[i + k - 1] - nums[i];
+            
+            // Update the minimum difference found so far
+            if (currentDiff < minDiff) {
+                minDiff = currentDiff;
+            }
+        }
+        
+        return minDiff;
+    }
+};
