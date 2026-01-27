@@ -1,0 +1,58 @@
+class Solution {
+public:
+    int minCost(int n, vector<vector<int>>& edges) {
+   /// Use long long for distance to prevent overflow during calculation
+        const long long INF = 1e18; 
+        
+        // Adjacency list: node -> vector of {neighbor, weight}
+        vector<vector<pair<int, int>>> adj(n);
+        
+        for (const auto& e : edges) {
+            int u = e[0];
+            int v = e[1];
+            int w = e[2];
+            
+            // 1. Normal directed edge u -> v with cost w
+            adj[u].push_back({v, w});
+            
+            // 2. Reversed edge v -> u with cost 2*w
+            // This represents using the switch at node 'v' to reverse the incoming edge 'u->v'
+            // Since we never visit a node twice in a shortest path, the "at most once" 
+            // constraint is naturally satisfied.
+            adj[v].push_back({u, 2 * w});
+        }
+
+        // Standard Dijkstra
+        // Min-heap stores {current_total_cost, current_node}
+        priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<pair<long long, int>>> pq;
+        vector<long long> dist(n, INF);
+
+        dist[0] = 0;
+        pq.push({0, 0});
+
+        while (!pq.empty()) {
+            long long d = pq.top().first;
+            int u = pq.top().second;
+            pq.pop();
+
+            // Optimization: If we found a shorter path to u already, skip
+            if (d > dist[u]) continue;
+            
+            // If we reached the target
+            if (u == n - 1) return (int)d;
+
+            for (const auto& edge : adj[u]) {
+                int v = edge.first;
+                int weight = edge.second;
+                
+                // Relaxation step
+                if (dist[u] + weight < dist[v]) {
+                    dist[v] = dist[u] + weight;
+                    pq.push({dist[v], v});
+                }
+            }
+        }
+
+        return -1;
+    }
+};
