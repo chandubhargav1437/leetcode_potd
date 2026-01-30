@@ -1,0 +1,100 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
+#include <climits>
+
+using namespace std;
+
+class Solution {
+public:
+    long long minimumCost(string source, string target, vector<string>& original, vector<string>& changed, vector<int>& cost) {
+        // Map unique strings to integer IDs
+        unordered_map<string, int> strToId;
+        int idCounter = 0;
+        
+        // Helper to get or create ID
+        auto getID = [&](const string& s) {
+            if (strToId.find(s) == strToId.end()) {
+                strToId[s] = idCounter++;
+            }
+            return strToId[s];
+        };
+
+        // 1. Identify all unique strings and lengths involved in transformations
+        unordered_set<int> lengths;
+        for (const string& s : original) {
+            getID(s);
+            lengths.insert(s.length());
+        }
+        for (const string& s : changed) {
+            getID(s);
+        }
+
+        int numNodes = strToId.size();
+        
+        // 2. Initialize Distance Matrix for Floyd-Warshall
+        // Use a large number for infinity, but safe from overflow when adding
+        const long long INF = 1e15; 
+        vector<vector<long long>> dist(numNodes, vector<long long>(numNodes, INF));
+
+        // Self-loops are 0
+        for (int i = 0; i < numNodes; ++i) dist[i][i] = 0;
+
+        // Populate initial edges
+        for (size_t i = 0; i < original.size(); ++i) {
+            int u = strToId[original[i]];
+            int v = strToId[changed[i]];
+            // Handle multiple rules for the same pair (keep minimum)
+            dist[u][v] = min(dist[u][v], (long long)cost[i]);
+        }
+
+        // 3. Floyd-Warshall Algorithm
+        for (int k = 0; k < numNodes; ++k) {
+            for (int i = 0; i < numNodes; ++i) {
+                if (dist[i][k] == INF) continue; // Optimization
+                for (int j = 0; j < numNodes; ++j) {
+                    if (dist[k][j] == INF) continue; // Optimization
+                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+                }
+            }
+        }
+
+        // 4. Dynamic Programming on the source string
+        int n = source.length();
+        vector<long long> dp(n + 1, INF);
+        dp[n] = 0; // Base case: end of string cost is 0
+
+        for (int i = n - 1; i >= 0; --i) {
+            // Option 1: If characters match, we can potentially skip (cost 0)
+            if (source[i] == target[i]) {
+                dp[i] = min(dp[i], dp[i + 1]);
+            }
+
+            // Option 2: Try to transform substrings starting at i
+            for (int len : lengths) {
+                if (i + len > n) continue;
+
+                // Optimization: If the remaining part is impossible, don't bother checking map
+                if (dp[i + len] == INF) continue;
+
+                string sSub = source.substr(i, len);
+                string tSub = target.substr(i, len);
+
+                // If both substrings are known nodes in our graph
+                if (strToId.count(sSub) && strToId.count(tSub)) {
+                    int u = strToId[sSub];
+                    int v = strToId[tSub];
+                    
+                    if (dist[u][v] < INF) {
+                        dp[i] = min(dp[i], dist[u][v] + dp[i + len]);
+                    }
+                }
+            }
+        }
+
+        return (dp[0] >= INF) ? -1 : dp[0];
+    }
+};
