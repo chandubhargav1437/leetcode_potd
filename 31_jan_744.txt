@@ -1,0 +1,23 @@
+class Solution {
+public:
+    char nextGreatestLetter(vector<char>& letters, char target) {
+        int req=target-'a';
+        int diff=0;
+        char ans='_';
+        int mm=INT_MAX;
+        for(auto x:letters){
+            if((x-'a')-req>0){
+            diff=(x-'a')-req;
+            if(diff<mm){
+                mm=diff;
+                ans=x;
+            }
+            }
+
+        }
+        if(ans=='_'){
+            return letters[0];
+        }
+        return ans;
+    }
+};
