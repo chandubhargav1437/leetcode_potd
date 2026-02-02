@@ -1,0 +1,105 @@
+#include <vector>
+#include <set>
+#include <algorithm>
+#include <climits>
+#include <iterator>
+
+using namespace std;
+
+class Solution {
+public:
+    long long minimumCost(vector<int>& nums, int k, int dist) {
+        // The first element is always part of the cost.
+        long long base_cost = nums[0];
+        int n = nums.size();
+        
+        // Edge Case: k=2
+        // We only need to choose one more index i_1 (where i_1 >= 1).
+        // The constraint becomes i_1 - i_1 <= dist, which is always true.
+        // So we simply find the minimum element in nums[1...n-1].
+        if (k == 2) {
+            long long min_val = LLONG_MAX;
+            for (int i = 1; i < n; ++i) {
+                if (nums[i] < min_val) {
+                    min_val = nums[i];
+                }
+            }
+            return base_cost + min_val;
+        }
+
+        // For k > 2, we use a sliding window to maintain the smallest (k-2) elements.
+        int target = k - 2;
+        multiset<int> low, high;
+        long long sum_low = 0;
+        
+        // Helper: Add value to window
+        auto add = [&](int val) {
+            low.insert(val);
+            sum_low += val;
+            // If low has too many elements, move the largest to high
+            if (low.size() > target) {
+                int largest_in_low = *low.rbegin();
+                low.erase(prev(low.end()));
+                sum_low -= largest_in_low;
+                high.insert(largest_in_low);
+            }
+        };
+        
+        // Helper: Remove value from window
+        auto remove = [&](int val) {
+            // Try to find and remove from high first
+            auto it_high = high.find(val);
+            if (it_high != high.end()) {
+                high.erase(it_high);
+            } else {
+                // If not in high, it must be in low
+                auto it_low = low.find(val);
+                if (it_low != low.end()) {
+                    sum_low -= val;
+                    low.erase(it_low);
+                    // Refill low from high if possible to maintain size
+                    if (!high.empty()) {
+                        int smallest_in_high = *high.begin();
+                        high.erase(high.begin());
+                        low.insert(smallest_in_high);
+                        sum_low += smallest_in_high;
+                    }
+                }
+            }
+        };
+        
+        // 1. Initialize Window
+        // We prepare the window for the first calculation at R = k-1.
+        // At R = k-1, we will insert nums[k-2].
+        // So beforehand, we insert nums[1] up to nums[k-3].
+        for (int i = 1; i <= k - 3; ++i) {
+            add(nums[i]);
+        }
+        
+        long long min_total_cost = LLONG_MAX;
+
+        // 2. Sliding Window Loop
+        // R represents the starting index of the k-th subarray (i_{k-1})
+        for (int R = k - 1; R < n; ++R) {
+            // Add the new candidate entering the valid range [R-dist, R-1]
+            // The new candidate is nums[R-1]
+            add(nums[R - 1]);
+            
+            // Remove the candidate leaving the valid range
+            // The range length is 'dist', so we remove index (R - dist - 1).
+            // We only remove if that index was actually part of our candidate pool (index >= 1).
+            int remove_idx = R - dist - 1;
+            if (remove_idx >= 1) {
+                remove(nums[remove_idx]);
+            }
+            
+            // Calculate total cost: First element + Last element + Sum of smallest k-2 intermediate
+            long long current_cost = base_cost + nums[R] + sum_low;
+            if (current_cost < min_total_cost) {
+                min_total_cost = current_cost;
+            }
+        }
+
+        return min_total_cost;
+    }
+};
