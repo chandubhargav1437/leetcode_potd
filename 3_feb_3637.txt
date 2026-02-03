@@ -1,0 +1,41 @@
+class Solution {
+public:
+    bool isTrionic(vector<int>& nums) {
+        int n = nums.size();
+        if (n < 4) return false; // Minimum length to satisfy 0 < p < q < n - 1
+
+        int i = 0;
+
+        // 1. Strictly Increasing (0 to p)
+        // Must move at least once, and cannot be the last element
+        while (i + 1 < n && nums[i] < nums[i + 1]) {
+            i++;
+        }
+        
+        // p must be > 0 (we moved) and not the end of the array
+        if (i == 0 || i == n - 1) return false;
+        
+        int p = i;
+
+        // 2. Strictly Decreasing (p to q)
+        // Must move at least once from p
+        while (i + 1 < n && nums[i] > nums[i + 1]) {
+            i++;
+        }
+        
+        // q must be > p (we moved) and not the end of the array
+        if (i == p || i == n - 1) return false;
+        
+        int q = i;
+
+        // 3. Strictly Increasing (q to n - 1)
+        // Must move at least once from q
+        while (i + 1 < n && nums[i] < nums[i + 1]) {
+            i++;
+        }
+
+        // Final check: Did we reach the very last index?
+        // And did we actually move during the last segment?
+        return i == n - 1 && i > q;
+    }
+};
