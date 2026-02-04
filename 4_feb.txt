@@ -1,0 +1,105 @@
+#include <vector>
+#include <algorithm>
+#include <iostream>
+
+using namespace std;
+
+class Solution {
+public:
+    long long maxSumTrionic(vector<int>& nums) {
+        int n = nums.size();
+        if (n < 4) return 0; // Minimum 4 elements required for l < p < q < r
+
+        // Use a safe "infinity" that won't overflow when numbers are added to it.
+        // -1e15 is safe given n <= 10^5 and val <= 10^9.
+        const long long INF_NEG = -1e15; 
+
+        // State variables representing the max sum ending at the previous index (i-1):
+        // inc: strictly increasing (length >= 2)
+        // dec: strictly increasing then strictly decreasing (l < p < q)
+        // tri: strictly increasing, decreasing, then increasing (l < p < q < r)
+        
+        long long inc = INF_NEG;
+        long long dec = INF_NEG;
+        long long tri = INF_NEG;
+        
+        long long max_sum = INF_NEG;
+
+        for (int i = 1; i < n; ++i) {
+            long long curr_val = nums[i];
+            long long prev_val = nums[i-1];
+
+            long long new_inc = INF_NEG;
+            long long new_dec = INF_NEG;
+            long long new_tri = INF_NEG;
+
+            if (curr_val > prev_val) {
+                // UPWARD SLOPE
+                
+                // 1. Update Inc (Length >= 2)
+                // Option A: Extend existing increasing seq (inc + curr)
+                // Option B: Start new increasing seq of length 2 (prev + curr)
+                // We take max(Option A, Option B) to drop negative prefixes.
+                if (inc != INF_NEG) {
+                    new_inc = max(inc + curr_val, prev_val + curr_val);
+                } else {
+                    new_inc = prev_val + curr_val;
+                }
+
+                // 2. Update Tri (End of 2nd Up leg)
+                // Extend existing tri OR transition from a Valley (dec)
+                long long best_prev = INF_NEG;
+                if (tri != INF_NEG) best_prev = max(best_prev, tri);
+                if (dec != INF_NEG) best_prev = max(best_prev, dec);
+                
+                if (best_prev != INF_NEG) {
+                    new_tri = best_prev + curr_val;
+                }
+
+                // 'dec' cannot end on an upward slope
+                new_dec = INF_NEG;
+
+            } else if (curr_val < prev_val) {
+                // DOWNWARD SLOPE
+
+                // 1. Update Dec (End of Down leg)
+                // Extend existing dec OR transition from a Peak (inc)
+                long long best_prev = INF_NEG;
+                if (dec != INF_NEG) best_prev = max(best_prev, dec);
+                if (inc != INF_NEG) best_prev = max(best_prev, inc);
+                
+                if (best_prev != INF_NEG) {
+                    new_dec = best_prev + curr_val;
+                }
+                
+                // 'inc' (length >= 2) cannot end on a downward slope
+                new_inc = INF_NEG;
+                // 'tri' cannot end on a downward slope
+                new_tri = INF_NEG;
+
+            } else {
+                // EQUAL (Strictness broken)
+                // No strictly increasing/decreasing sequence can continue or form here.
+                new_inc = INF_NEG;
+                new_dec = INF_NEG;
+                new_tri = INF_NEG;
+            }
+
+            // Update states
+            inc = new_inc;
+            dec = new_dec;
+            tri = new_tri;
+
+            // Update global maximum if we have a valid trionic sum
+            if (tri != INF_NEG) {
+                max_sum = max(max_sum, tri);
+            }
+        }
+
+        // If no trionic subarray was found, the problem implies returning 0 
+        // (based on common LeetCode patterns for "max sum" where empty/invalid is 0,
+        // though strictly the problem asks for max of 'any' trionic).
+        // If max_sum is still INF_NEG, it means no valid subarray exists.
+        return (max_sum == INF_NEG) ? 0 : max_sum;
+    }
+};
