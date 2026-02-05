@@ -1,0 +1,24 @@
+class Solution {
+public:
+    vector<int> constructTransformedArray(vector<int>& nums) {
+    vector<int>ans;
+    int n=nums.size();
+    int i=0;
+    for(auto x:nums){
+        if(x>0){
+            x=x%n;
+            int res=i+x;
+            res=res%n;
+            ans.push_back(nums[res]);
+        }else{
+            x=n-abs(x)%n;
+            x=x%n;
+             int res=i+x;
+            res=res%n;
+            ans.push_back(nums[res]);
+        }
+        i++;
+    }
+    return ans;
+    }
+};
