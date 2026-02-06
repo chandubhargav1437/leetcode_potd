@@ -1,0 +1,31 @@
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+class Solution {
+public:
+    int minRemoval(vector<int>& nums, int k) {
+        // Step 1: Sort the array to ensure the valid subset is a contiguous subarray
+        sort(nums.begin(), nums.end());
+        
+        int n = nums.size();
+        int left = 0;
+        int max_kept = 0;
+        
+        // Step 2: Sliding Window
+        for (int right = 0; right < n; ++right) {
+            // Check condition: max <= min * k
+            // We use (long long) to prevent integer overflow during multiplication
+            while ((long long)nums[right] > (long long)nums[left] * k) {
+                left++;
+            }
+            
+            // Calculate the size of the current valid window
+            max_kept = max(max_kept, right - left + 1);
+        }
+        
+        // Step 3: Return total elements minus the maximum we could keep
+        return n - max_kept;
+    }
+};
