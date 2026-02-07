@@ -1,0 +1,29 @@
+#include <string>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+class Solution {
+public:
+    int minimumDeletions(string s) {
+        int count_b = 0;
+        int min_deletions = 0;
+
+        for (char c : s) {
+            if (c == 'b') {
+                // If we see 'b', we just increment the count.
+                // It doesn't cause a conflict yet, but it increases the cost 
+                // if we decide to keep a future 'a'.
+                count_b++;
+            } else { // c == 'a'
+                // If we see 'a', we have a conflict with the 'b's seen so far.
+                // Option 1: Delete this 'a' (add 1 to current deletions).
+                // Option 2: Keep this 'a' (which means we must remove all 'b's seen).
+                min_deletions = min(min_deletions + 1, count_b);
+            }
+        }
+
+        return min_deletions;
+    }
+};
