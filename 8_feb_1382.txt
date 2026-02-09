@@ -1,0 +1,51 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ * int val;
+ * TreeNode *left;
+ * TreeNode *right;
+ * TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ * TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ * TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    // Step 1: Helper vector to store sorted values
+    vector<int> sortedNodes;
+
+    // Helper function to perform Inorder Traversal
+    void inorderTraversal(TreeNode* root) {
+        if (root == nullptr) return;
+        
+        inorderTraversal(root->left);
+        sortedNodes.push_back(root->val); // Store value
+        inorderTraversal(root->right);
+    }
+
+    // Step 2: Recursive function to build balanced BST from sorted array
+    TreeNode* buildBalancedBST(int start, int end) {
+        // Base case: If start index exceeds end, no elements left
+        if (start > end) return nullptr;
+
+        // Find the middle element
+        int mid = start + (end - start) / 2;
+
+        // Create a new node with the middle value
+        TreeNode* node = new TreeNode(sortedNodes[mid]);
+
+        // Recursively build left and right subtrees
+        node->left = buildBalancedBST(start, mid - 1);
+        node->right = buildBalancedBST(mid + 1, end);
+
+        return node;
+    }
+
+    TreeNode* balanceBST(TreeNode* root) {
+        // 1. Flatten the tree into a sorted vector
+        inorderTraversal(root);
+
+        // 2. Rebuild the tree from the sorted vector
+        return buildBalancedBST(0, sortedNodes.size() - 1);
+    }
+};
