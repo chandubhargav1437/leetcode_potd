@@ -1,0 +1,39 @@
+#include <vector>
+#include <unordered_set>
+#include <algorithm>
+
+using namespace std;
+
+class Solution {
+public:
+    int longestBalanced(vector<int>& nums) {
+        int n = nums.size();
+        int maxLen = 0;
+
+        // Iterate over all possible starting points
+        for (int i = 0; i < n; ++i) {
+            unordered_set<int> seen;
+            int evenCount = 0;
+            int oddCount = 0;
+
+            // Extend the subarray to the right
+            for (int j = i; j < n; ++j) {
+                // Only process if the number hasn't been seen in this subarray
+                if (seen.find(nums[j]) == seen.end()) {
+                    seen.insert(nums[j]);
+                    if (nums[j] % 2 == 0) {
+                        evenCount++;
+                    } else {
+                        oddCount++;
+                    }
+                }
+
+                // Check if the subarray is balanced
+                if (evenCount == oddCount) {
+                    maxLen = max(maxLen, j - i + 1);
+                }
+            }
+        }
+        return maxLen;
+    }
+};
