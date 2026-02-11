@@ -1,0 +1,117 @@
+#include <vector>
+#include <algorithm>
+#include <map>
+
+using namespace std;
+
+class Solution {
+    struct Node {
+        int minVal; // Minimum value in the range
+        int maxVal; // Maximum value in the range
+        int lazy;   // Lazy propagation value
+    };
+
+    vector<Node> tree;
+    int n;
+
+    void push(int node) {
+        if (tree[node].lazy != 0) {
+            // Apply to left child
+            tree[2 * node].minVal += tree[node].lazy;
+            tree[2 * node].maxVal += tree[node].lazy;
+            tree[2 * node].lazy += tree[node].lazy;
+            
+            // Apply to right child
+            tree[2 * node + 1].minVal += tree[node].lazy;
+            tree[2 * node + 1].maxVal += tree[node].lazy;
+            tree[2 * node + 1].lazy += tree[node].lazy;
+            
+            // Reset current
+            tree[node].lazy = 0;
+        }
+    }
+
+    void update(int node, int start, int end, int l, int r, int val) {
+        if (l > end || r < start) return;
+        if (l <= start && end <= r) {
+            tree[node].minVal += val;
+            tree[node].maxVal += val;
+            tree[node].lazy += val;
+            return;
+        }
+        push(node);
+        int mid = (start + end) / 2;
+        update(2 * node, start, mid, l, r, val);
+        update(2 * node + 1, mid + 1, end, l, r, val);
+        tree[node].minVal = min(tree[2 * node].minVal, tree[2 * node + 1].minVal);
+        tree[node].maxVal = max(tree[2 * node].maxVal, tree[2 * node + 1].maxVal);
+    }
+
+    // Find the leftmost index where value is 0
+    int findFirstZero(int node, int start, int end) {
+        // If 0 is not in the range [minVal, maxVal], it can't be here
+        if (tree[node].minVal > 0 || tree[node].maxVal < 0) return -1;
+        
+        if (start == end) return start;
+        
+        push(node);
+        int mid = (start + end) / 2;
+        
+        // Try left child first (to find the longest subarray, we want smallest index)
+        int res = findFirstZero(2 * node, start, mid);
+        if (res != -1) return res;
+        
+        return findFirstZero(2 * node + 1, mid + 1, end);
+    }
+
+public:
+    int longestBalanced(vector<int>& nums) {
+        n = nums.size();
+        tree.assign(4 * n, {0, 0, 0});
+        
+        // Map to store the last occurrence index of each number
+        // Using unordered_map might be slightly slower due to collisions, map is safer for worst-case
+        // Given constraints V <= 100,000, we can use a fixed vector if we compress or if V is small.
+        // To be safe for any value range, coordinate compression is ideal, but map works for N=10^5.
+        // Let's use coordinate compression for maximum speed to avoid TLE on map overhead.
+        
+        vector<int> vals = nums;
+        sort(vals.begin(), vals.end());
+        vals.erase(unique(vals.begin(), vals.end()), vals.end());
+        
+        // Precompute parity for compressed values
+        vector<int> parity(vals.size()); // 1 for Even, -1 for Odd
+        for(int i=0; i<vals.size(); ++i) {
+            if (vals[i] % 2 == 0) parity[i] = 1;
+            else parity[i] = -1;
+        }
+
+        vector<int> last(vals.size(), -1);
+        int maxLen = 0;
+
+        for (int i = 0; i < n; ++i) {
+            // 1. Get rank and parity
+            int rank = lower_bound(vals.begin(), vals.end(), nums[i]) - vals.begin();
+            int val = parity[rank]; 
+            int prev = last[rank];
+
+            // 2. Update the range (last_occurrence + 1 ... current_index)
+            // If even, we add +1 (balance shifts towards even)
+            // If odd, we add -1 (balance shifts towards odd)
+            update(1, 0, n - 1, prev + 1, i, val);
+
+            // 3. Update last seen position
+            last[rank] = i;
+
+            // 4. Query: Find the smallest index k such that tree[k] == 0
+            // This means distinct_even - distinct_odd == 0 for range nums[k...i]
+            int startIdx = findFirstZero(1, 0, n - 1);
+            
+            if (startIdx != -1 && startIdx <= i) {
+                maxLen = max(maxLen, i - startIdx + 1);
+            }
+        }
+
+        return maxLen;
+    }
+};
