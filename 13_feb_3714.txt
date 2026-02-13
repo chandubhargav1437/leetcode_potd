@@ -1,0 +1,94 @@
+class Solution {
+private:
+    // Helper function to handle Case 2: Substrings with exactly 2 distinct characters
+    int getMax2(const string& s, char c1, char c2, char exclude) {
+        int n = s.length();
+        int max_len = 0;
+        int start = 0;
+        
+        while (start < n) {
+            // Skip the excluded character
+            if (s[start] == exclude) {
+                start++;
+                continue;
+            }
+            
+            // Find the boundary of the current valid segment
+            int end = start;
+            while (end < n && s[end] != exclude) {
+                end++;
+            }
+            
+            // Map to store the first occurrence of a specific difference
+            unordered_map<int, int> mp;
+            mp[0] = start - 1; // Base case: difference of 0 before the segment starts
+            int diff = 0;
+            
+            // Process the segment [start, end)
+            for (int i = start; i < end; ++i) {
+                if (s[i] == c1) diff++;
+                else if (s[i] == c2) diff--;
+                
+                if (mp.count(diff)) {
+                    max_len = max(max_len, i - mp[diff]);
+                } else {
+                    mp[diff] = i;
+                }
+            }
+            start = end; // Move to the next segment
+        }
+        return max_len;
+    }
+
+public:
+    int longestBalanced(string s) {
+        int n = s.length();
+        if (n == 0) return 0;
+        
+        // --- Case 1: Exactly 1 distinct character ---
+        int max1 = 1;
+        int curr = 1;
+        for (int i = 1; i < n; ++i) {
+            if (s[i] == s[i-1]) {
+                curr++;
+            } else {
+                max1 = max(max1, curr);
+                curr = 1;
+            }
+        }
+        max1 = max(max1, curr);
+        
+        // --- Case 2: Exactly 2 distinct characters ---
+        int max2 = 0;
+        max2 = max(max2, getMax2(s, 'a', 'b', 'c')); // Equal a & b, no c
+        max2 = max(max2, getMax2(s, 'b', 'c', 'a')); // Equal b & c, no a
+        max2 = max(max2, getMax2(s, 'c', 'a', 'b')); // Equal c & a, no b
+        
+        // --- Case 3: Exactly 3 distinct characters ---
+        int max3 = 0;
+        unordered_map<long long, int> mp3;
+        mp3[0] = -1; // Represents diff1 = 0, diff2 = 0 at the start
+        
+        int a = 0, b = 0, c = 0;
+        for (int i = 0; i < n; ++i) {
+            if (s[i] == 'a') a++;
+            else if (s[i] == 'b') b++;
+            else if (s[i] == 'c') c++;
+            
+            int diff1 = a - b;
+            int diff2 = a - c;
+            
+            // Combine two 32-bit integers into a unique 64-bit key safely
+            long long key = ((long long)diff1 << 32) | (diff2 & 0xFFFFFFFFLL);
+            
+            if (mp3.count(key)) {
+                max3 = max(max3, i - mp3[key]);
+            } else {
+                mp3[key] = i;
+            }
+        }
+        
+        // Return the maximum length found among all three valid categories
+        return max(max1, max(max2, max3));
+    }
+};
