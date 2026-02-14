@@ -1,0 +1,31 @@
+helllo hi how arre you jevliska
+class Solution {
+public:
+    double champagneTower(int poured, int query_row, int query_glass) {
+        // We only need to simulate up to the query_row. 
+        // A row 'r' has 'r + 1' glasses.
+        vector<vector<double>> tower(query_row + 1, vector<double>(query_row + 1, 0.0));
+        
+        // Pour everything into the top glass
+        tower[0][0] = (double)poured;
+        
+        // Simulate the flow row by row
+        for (int r = 0; r < query_row; ++r) {
+            for (int c = 0; c <= r; ++c) {
+                // Check if the current glass overflows
+                if (tower[r][c] > 1.0) {
+                    // Calculate the amount that spills over
+                    double overflow = (tower[r][c] - 1.0) / 2.0;
+                    
+                    // Distribute to the two glasses directly below
+                    tower[r + 1][c] += overflow;     // Left child
+                    tower[r + 1][c + 1] += overflow; // Right child
+                }
+            }
+        }
+        
+        // The query glass might have had more than 1 cup flow through it.
+        // But physically, it can only hold a maximum of 1 cup.
+        return min(1.0, tower[query_row][query_glass]);
+    }
+};
