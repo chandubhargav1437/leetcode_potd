@@ -1,0 +1,25 @@
+#include <cstdint>
+
+class Solution {
+public:
+    int reverseBits(int n) {
+        // Treat the input as an unsigned integer to ensure logical right shifts 
+        // and prevent Undefined Behavior when left-shifting.
+        uint32_t num = n; 
+        uint32_t result = 0;
+        
+        for (int i = 0; i < 32; ++i) {
+            // 1. Shift result to the left to make room for the new bit
+            result <<= 1;
+            
+            // 2. Extract the LSB of 'num' and insert it into 'result'
+            result |= (num & 1);
+            
+            // 3. Shift 'num' to the right to process the next bit
+            num >>= 1;
+        }
+        
+        // Cast the result back to a signed int to match the function signature
+        return static_cast<int>(result);
+    }
+};
