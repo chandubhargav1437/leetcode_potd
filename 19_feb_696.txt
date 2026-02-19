@@ -1,0 +1,26 @@
+class Solution {
+public:
+    int countBinarySubstrings(string s) {
+        int count = 0;
+        int prevGroup = 0;
+        int currGroup = 1;
+        
+        for (int i = 1; i < s.length(); i++) {
+            if (s[i] == s[i - 1]) {
+                // We are still in the same block of characters
+                currGroup++;
+            } else {
+                // We hit a new block. 
+                // Add the number of valid substrings formed by the last two blocks.
+                count += min(prevGroup, currGroup);
+                
+                // Move current block to previous, and reset current
+                prevGroup = currGroup;
+                currGroup = 1;
+            }
+        }
+        
+        // Don't forget the last pair of blocks!
+        return count + min(prevGroup, currGroup);
+    }
+};
