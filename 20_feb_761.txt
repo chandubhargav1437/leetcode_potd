@@ -1,0 +1,41 @@
+class Solution {
+public:
+    string makeLargestSpecial(string s) {
+        int count = 0;
+        int i = 0;
+        vector<string> substrings;
+        
+        // Step 1: Split the string into primitive special substrings
+        for (int j = 0; j < s.size(); ++j) {
+            if (s[j] == '1') {
+                count++;
+            } else {
+                count--;
+            }
+            
+            // When count hits 0, we've found a complete primitive special substring
+            if (count == 0) {
+                // Step 2: Recursively process the inner string (excluding the outer 1 and 0)
+                string inner = s.substr(i + 1, j - i - 1);
+                string processedInner = makeLargestSpecial(inner);
+                
+                // Reconstruct the primitive string and add it to our list
+                substrings.push_back("1" + processedInner + "0");
+                
+                // Move the start pointer for the next substring
+                i = j + 1;
+            }
+        }
+        
+        // Step 3: Sort the substrings in descending order to maximize lexicographical value
+        sort(substrings.begin(), substrings.end(), greater<string>());
+        
+        // Step 4: Concatenate and return
+        string result = "";
+        for (const string& str : substrings) {
+            result += str;
+        }
+        
+        return result;
+    }
+};
