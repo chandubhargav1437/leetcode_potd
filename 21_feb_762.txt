@@ -1,0 +1,29 @@
+class Solution {
+public:
+    int countPrimeSetBits(int left, int right) {
+        // bitset<
+        int ans=0;
+        int now=0;
+        for(int i=left;i<=right;i++){
+            string temp="";
+            temp=bitset<20>(i).to_string();
+            int c=0;
+            for(auto x:temp){
+                if(x=='1'){
+                    c++;
+                }
+            }
+            bool flag=true;
+            for(int j=1;j<(c+2)/2;j++){
+                if(c%j==0){
+                    now++;
+                }
+            }
+            if(now==1){
+                ans++;
+            }
+            now=0;
+        }
+        return ans;
+    }
+};
