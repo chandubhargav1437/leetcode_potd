@@ -1,0 +1,52 @@
+class Solution {
+public:
+    int minSwaps(vector<vector<int>>& grid) {
+        int n = grid.size();
+        vector<int> zeros(n, 0);
+        
+        // Step 1: Count trailing zeros for each row
+        for (int i = 0; i < n; i++) {
+            int count = 0;
+            for (int j = n - 1; j >= 0; j--) {
+                if (grid[i][j] == 0) {
+                    count++;
+                } else {
+                    break;
+                }
+            }
+            zeros[i] = count;
+        }
+        
+        int swaps = 0;
+        
+        // Step 2: Greedily place a valid row at each index
+        for (int i = 0; i < n; i++) {
+            int target = n - 1 - i;
+            int found_idx = -1;
+            
+            // Find the first row that has enough trailing zeros
+            for (int j = i; j < n; j++) {
+                if (zeros[j] >= target) {
+                    found_idx = j;
+                    break;
+                }
+            }
+            
+            // If no row can satisfy the requirement for row i, it's invalid
+            if (found_idx == -1) {
+                return -1;
+            }
+            
+            // Step 3: Shift the found row up to position i
+            // This accurately simulates the adjacent swaps
+            swaps += (found_idx - i);
+            int val = zeros[found_idx];
+            for (int j = found_idx; j > i; j--) {
+                zeros[j] = zeros[j - 1];
+            }
+            zeros[i] = val;
+        }
+        
+        return swaps;
+    }
+};
