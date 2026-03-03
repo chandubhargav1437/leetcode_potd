@@ -1,0 +1,32 @@
+class Solution {
+public:
+    string curr(string s){
+        string temp="";
+        temp+=s;
+        temp+="1";
+        string nn="";
+        for(auto x:s){
+         if(x=='1'){
+             nn+='0';
+         }else{
+             nn+='1';
+         }
+        }
+        reverse(nn.begin(),nn.end());
+        temp+=nn;
+        return temp;
+        
+    }
+    char findKthBit(int n, int k) {
+        int i=k;
+        string now="0";
+        string haha="";
+        n--;
+        while(n--){
+          haha=now;
+            now=curr(haha);
+        }
+      //  cout<<now<<endl;
+            return now[i-1];
+    }
+};
